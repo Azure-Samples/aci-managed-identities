@@ -1,57 +1,21 @@
-# Project Name
+# Examples for Using Azure Container Instances with Managed Identites
 
-(short, 1-3 sentenced, description of the project)
+Examples in multiple langauges showing common senerios on taking advatage of Managed Identiteis for Azure Resources with ACI.
 
-## Features
+## Prerequisites
 
-This project framework provides the following features:
+- An Azure subscription. Get a [free trial here](https://azure.microsoft.com/en-us/free/)!
 
-* Feature 1
-* Feature 2
-* ...
+## Examples
 
-## Getting Started
+Here is a list of the provided examples:
 
-### Prerequisites
+### Go
+-------
 
-(ideally very short, if any)
-
-- OS
-- Library version
-- ...
-
-### Installation
-
-(ideally very short)
-
-- npm install [package name]
-- mvn install
-- ...
-
-### Quickstart
-(Add steps to get up and running quickly)
-
-1. git clone [repository clone url]
-2. cd [respository name]
-3. ...
-
-
-## Demo
-
-A demo app is included to show how to use the project.
-
-To run the demo, follow these steps:
-
-(Add steps to start up the demo)
-
-1.
-2.
-3.
+- UserAssignedCosmosdb - Use a user assigned identity to access data from [CosmosDB](https://docs.microsoft.com/en-us/azure/cosmos-db/introduction).
+- UserAssignedKeyVault - Use a user assigned identity to retrieve a secret from an [Azure Key Vault](https://azure.microsoft.com/en-us/services/key-vault/)
 
 ## Resources
 
-(Any additional resources or related projects)
-
-- Link to supporting information
-- Link to similar sample
-- ...
+For details on contributing changes and information on this project's code of conduct, please refer to the [Contributing](CONTRIBUTING.md) file.
