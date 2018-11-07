@@ -32,7 +32,9 @@ The above command will install all the dependencies into the container. The firs
 
 2. Push the image to [DockerHub](http://dockerhub.com)
 
+```sh
     docker push <dockerhub-username>/msi-cosmosdb:0.0.1
+```
 
 ### Setting Up the Azure Resources
 
