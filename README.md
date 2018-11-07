@@ -1,6 +1,6 @@
 # Examples for Using Azure Container Instances with Managed Identites
 
-Examples in multiple langauges showing common senerios on taking advatage of Managed Identiteis for Azure Resources with ACI.
+Examples in multiple langauges showing common senerios using Managed Identiteis for Azure Resources with ACI.
 
 ## Prerequisites
 
