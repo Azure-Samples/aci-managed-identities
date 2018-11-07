@@ -22,13 +22,17 @@ First up is to build and push our container to a container registry e.g. Dockerh
 
 1. Run the following command to build the container image
 
+```sh
     docker build -t <dockerhub-username>/msi-comosdb:0.0.1 .
+ ```
 
 The above command will install all the dependencies into the container. The first time you run this is will take a while to download all of the dependencies but will be much faster once it is cached.
 
 2. Push the image to [DockerHub](http://dockerhub.com)
 
+```sh
     docker push <dockerhub-username>/msi-cosmosdb:0.0.1
+```
 
 ### Setting Up the Azure Resources
 
