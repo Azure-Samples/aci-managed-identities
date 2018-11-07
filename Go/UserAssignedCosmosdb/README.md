@@ -14,15 +14,19 @@ It's not the prettiest but should show just how powerful Azure Container Instanc
 
 - A [DockerHub](http://dockerhub.com) or other container registry account.
 
+- A machine with Docker installed
+
 ## Getting Started
 
 ### Build and Push the Image
 
 First up is to build and push our container to a container registry e.g. Dockerhub, Azure Container Registry
 
-1. Run the following command to build the container image
+1. On a machine with docker installed, run the following command in this directory with the Dockerfile to build the container image
 
-    docker build -t <dockerhub-username>/msi-comosdb:0.0.1 .
+```sh
+    docker build -t <dockerhub-username>/msi-cosmosdb:0.0.1 .
+```
 
 The above command will install all the dependencies into the container. The first time you run this is will take a while to download all of the dependencies but will be much faster once it is cached.
 
@@ -34,27 +38,35 @@ The above command will install all the dependencies into the container. The firs
 
 To deploy the container, open either a terminal with the Azure CLI installed or check out [CloudShell](https://shell.azure.com/) for a ready-to-go option
 
-Create a resource group. Replace myResourceGroup with whatever name you would like
+First, lets set up some environment variables to make these commands nicer to copy and paste
 
-    az group create --name myResourceGroup --location westus
+```sh
+RESOURCE_GROUP="<myResourceGroup>" #If this doesn't exist we will create one
+COMOSDB_ACCOUNT_NAME="<my-cosmosdb-account-name>" #This must be all lowercase
+KEYVAULT_NAME="<mykeyvault>
+```
+
+Create a resource group.
+
+    az group create --name $RESOURCE_GROUP --location westus
 
 #### Create a CosmosDB Mongo Database
 
 Create a CosmosDB with the MongoDB API. Make sure the name is all lowercase
 
-    az cosmosdb create -g myResourceGroup --name mycosmosdbaccountname --kind MongoDB
+    az cosmosdb create -g $RESOURCE_GROUP --name $COMOSDB_ACCOUNT_NAME --kind MongoDB
 
 The above command will take a few minutes to finish creating the database.
 
 THe following command will get the secret connection string and remove the ssl=true which is required for our mongo golang driver
 
-    CONNECTION_STRING=$(az cosmosdb list-connection-strings -g myResourceGroup -n mycosmosdbaccountname --query connectionStrings[0].connectionString |sed -e "s/?ssl=true//")
+    CONNECTION_STRING=$(az cosmosdb list-connection-strings -g $RESOURCE_GROUP -n $COMOSDB_ACCOUNT_NAME --query connectionStrings[0].connectionString |sed -e "s/?ssl=true//")
 
 #### Create the User Assigned Identity
 
 Next we create a user assigned identity. Once we create and add the permissions, we will be able to use this for multiple container groups.
 
-    az identity create -g myResourceGroup --name myUserIdentity
+    az identity create -g $RESOURCE_GROUP --name myUserIdentity
 
 The output should look close to the following
 
@@ -83,28 +95,28 @@ Note: if you’re using Powershell, make sure to add the “$” when declaring 
 
 If you don’t already have a Key Vault create, use the following command to create one:
 
-    az keyvault create -g myResourceGroup --name <mykeyvault>
+    az keyvault create -g $RESOURCE_GROUP --name $KEYVAULT_NAME
 
 Now we can add our connection string we got earlier as a secret in KeyVault
 
-    az keyvault secret set --name cosmosDBConnectionString --value $CONNECTION_STRING --vault-name <mykeyvault>
+    az keyvault secret set --name cosmosDBConnectionString --value $CONNECTION_STRING --vault-name $KEYVAULT_NAME
 
 Now, we can give our identity access to the Key Vault
 
-    az keyvault set-policy -n <mykeyvault> --object-id $PRINCIPAL_ID -g myResourceGroup --secret-permissions get
+    az keyvault set-policy -n $KEYVAULT_NAME --object-id $PRINCIPAL_ID -g $RESOURCE_GROUP --secret-permissions get
 
 The above command uses the environment variable we set to give our identity “get” permission for secrets in the Key Vault
 
 ### Time to Deploy to Azure Container Instances
 
-Now we can use the single deploy command for ACI:
+Now we can use the single deploy command for ACI, make sure to change to the correct image name below:
 
 ```sh
 az container create \
-    --resource-group myResourceGroup \
+    --resource-group $RESOURCE_GROUP \
     --name msi-cosmosdb \
     --ip-address public \
-    -e VAULT_NAME=<mykeyvault> MSI_CLIENTID=$CLIENT_ID \
+    -e VAULT_NAME=$KEYVAULT_NAME MSI_CLIENTID=$CLIENT_ID \
     --image <dockerhub-username>/msi-cosmosdb:0.0.1 \
     --assign-identity $MSI_RESOURCE_ID \
     --query ipAddress.ip
