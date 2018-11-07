@@ -11,16 +11,19 @@ import (
 	"github.com/icrowley/fake"
 )
 
+// User holds inforamtion about a user
 type User struct {
 	Name  string `json:"name"`
 	Email string `json:"email"`
 }
 
+// DB is the database wrapper for a mongodb connection
 type DB struct {
 	connURI   string
 	Container string
 }
 
+// NewDB creates a new database wrapper
 func NewDB(connURI, container string) *DB {
 	return &DB{
 		connURI:   connURI,
@@ -49,6 +52,7 @@ func (db *DB) getConn() *mgo.Session {
 	return session
 }
 
+// InsertUsers inserts the passed in users into the database.
 func (db *DB) InsertUsers(users []User) error {
 	session := db.getConn()
 	defer session.Close()
@@ -75,6 +79,7 @@ func (db *DB) InsertUsers(users []User) error {
 	return nil
 }
 
+// GetUsers gets all of the users from the database.
 func (db *DB) GetUsers() ([]User, error) {
 	session := db.getConn()
 	defer session.Close()
@@ -92,6 +97,7 @@ func (db *DB) GetUsers() ([]User, error) {
 	return users, nil
 }
 
+// PopulateWithUsers generates and adds the passed in number of users to the database.
 func (db *DB) PopulateWithUsers(numUsers int) error {
 	users := generateFakeUsers(numUsers)
 

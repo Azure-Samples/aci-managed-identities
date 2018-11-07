@@ -17,6 +17,7 @@ import (
 
 const (
 	getSecretRetires = 10
+	cosmosDBURISecretName = "cosmosDBConnectionString"
 )
 
 func main() {
@@ -38,7 +39,7 @@ func main() {
 	count := 0
 	var dbURI string
 	for {
-		dbURI, err = keyClient.GetSecret("dbURI")
+		dbURI, err = keyClient.GetSecret(cosmosDBURISecretName)
 		if err != nil {
 			if count > getSecretRetires {
 				log.Fatalf("Failed to get secret within retries with err: %v", err)
@@ -61,6 +62,19 @@ func main() {
 		log.Fatal(err)
 	}
 
+	// if theres no users in the DB, generate some and add them in
+	if len(users) == 0 {
+		err := db.PopulateWithUsers(10)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		users, err = db.GetUsers()
+		if err != nil {
+			log.Fatal(err)
+		}
+	}
+
 	tmpl := template.Must(template.ParseFiles("index.html"))
 
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
@@ -75,6 +89,7 @@ func main() {
 	log.Fatal(http.ListenAndServe("0.0.0.0:80", nil))
 }
 
+// IndexPageData holds the data to populate index.html
 type IndexPageData struct {
 	PageTitle string
 	Users     []User
