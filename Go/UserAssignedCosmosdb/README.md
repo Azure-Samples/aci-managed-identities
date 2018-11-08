@@ -43,9 +43,11 @@ To deploy the container, open either a terminal with the Azure CLI installed or 
 First, lets set up some environment variables to make these commands nicer to copy and paste
 
 ```sh
+DOCKER_IMAGE_NAME="<imageName>" #This is the image name you pushed to dockerhub
 RESOURCE_GROUP="<myResourceGroup>" #If this doesn't exist we will create one
 COMOSDB_ACCOUNT_NAME="<my-cosmosdb-account-name>" #This must be all lowercase
-KEYVAULT_NAME="<mykeyvault>
+KEYVAULT_NAME="<mykeyvault>"
+USER_ASSIGNED_IDENTITY_NAME="<myUserAssignedIdenity>"
 ```
 
 Create a resource group.
@@ -62,36 +64,17 @@ The above command will take a few minutes to finish creating the database.
 
 THe following command will get the secret connection string and remove the ssl=true which is required for our mongo golang driver
 
-    CONNECTION_STRING=$(az cosmosdb list-connection-strings -g $RESOURCE_GROUP -n $COMOSDB_ACCOUNT_NAME --query connectionStrings[0].connectionString |sed -e "s/?ssl=true//")
+    CONNECTION_STRING=$(az cosmosdb list-connection-strings -g $RESOURCE_GROUP -n $COMOSDB_ACCOUNT_NAME --query connectionStrings[0].connectionString |sed -e "s/\/?ssl=true//")
 
 #### Create the User Assigned Identity
 
 Next we create a user assigned identity. Once we create and add the permissions, we will be able to use this for multiple container groups.
 
-    az identity create -g $RESOURCE_GROUP --name myUserIdentity
+The following commands will create the identity and get the needed information from it.
 
-The output should look close to the following
-
-    {
-        "clientId": "0f73d23a-9097-40e7-8753-89d35ced2ff4",
-        "clientSecretUrl": "theSecretURL",
-        "id": "<longResourceID>",
-        "location": "westus",
-        "name": "identityName",
-        "principalId": "d259206f-b63f-405e-ae52-551b2e769a8b",
-        "resourceGroup": "myResourceGroup",
-        "tags": {},
-        "tenantId": "4720d658-5531-4d8e-889e-41fad886ab7a",
-        "type": "Microsoft.ManagedIdentity/userAssignedIdentities"
-    }
-
-To make our lives easier, lets add the important information from this output to some environment variables.
-
-    CLIENT_ID=<clientId>
-    PRINCIPAL_ID="<principalId>"
-    MSI_RESOURCE_ID="<id>"
-
-Note: if you’re using Powershell, make sure to add the “$” when declaring these variables.
+    CLIENT_ID=$(az identity create -g $RESOURCE_GROUP --name $USER_ASSIGNED_IDENTITY_NAME --query clientId | tr -d '"')
+    PRINCIPAL_ID=$(az identity show -g $RESOURCE_GROUP --name $USER_ASSIGNED_IDENTITY_NAME --query principalId | tr -d '"')
+    MSI_RESOURCE_ID=$(az identity show -g $RESOURCE_GROUP --name $USER_ASSIGNED_IDENTITY_NAME --query id | tr -d '"')
 
 #### Create a Key Vault and Set the Permissions
 
@@ -119,7 +102,7 @@ az container create \
     --name msi-cosmosdb \
     --ip-address public \
     -e VAULT_NAME=$KEYVAULT_NAME MSI_CLIENTID=$CLIENT_ID \
-    --image <dockerhub-username>/msi-cosmosdb:0.0.1 \
+    --image $DOCKER_IMAGE_NAME \
     --assign-identity $MSI_RESOURCE_ID \
     --query ipAddress.ip
 ```

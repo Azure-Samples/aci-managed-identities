@@ -16,7 +16,7 @@ import (
 )
 
 const (
-	getSecretRetires = 10
+	getSecretRetires      = 10
 	cosmosDBURISecretName = "cosmosDBConnectionString"
 )
 
